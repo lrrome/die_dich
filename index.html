@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Page Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" media="screen" href="style.css" />
+    <script src="main.js"></script>
+    <style>
+    .header {
+        padding: 30px;
+        background-color: #add8e6;
+      }
+      .header input {
+        width: 40%;
+      }
+      .image {
+        margin: 15px 0;
+        overflow: hidden;
+        max-height: 30vh;
+      }
+      .image:hover {
+        opacity: 0.8;
+      }
+      .hidden {
+        display: none;
+      }
+      #btnShowMore,
+      #btnSearchMore {
+        padding: 20px;
+        width: 100%;
+        margin-bottom: 20px;
+        opacity: 0.6;
+      }
+      </style>
+</head>
+<body>
+    
+  <div class="container">
+    <div class="row header">
+      <div class="col-8">
+        <input id="searchTerm" name="search" placeholder="Поиск.."/>
+        <button class="btn btn-primary" id="btnSearch">Искать</button>
+      </div>
+      <div class="col-4">
+        <button class="btn btn-primary" id="showMain">Главная</button>
+      </div>
+    </div>
+    <div class="row main">
+      <div class="col-12">
+        <h3>Последние опубликованные фотографии</h3>
+      </div>
+      <div class="more col-12">
+        <button class="btn btn-primary" id="btnShowMore">Показать больше</button>
+      </div>
+    </div>
+    <div class="row search hidden">
+      <div class="container">
+        <div class="row searchResults"></div>
+        <div class="row">
+          <button class="btn btn-primary" id="btnSearchMore">Больше результатов</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <script>
+    var client_id = 'client_id=74d0dc1c0655d10cd3d5d1b756a427f392bd573a270b723e2636c81ef22d06e5'
+    var page = 1;
+    var searchPage = 1;
+
+    //__________Вывод изображений на главную
+    function showMain(){
+        $.getJSON('https://api.unsplash.com/photos/?' + client_id + '&page=' + page + '&per_page=10', function(data) {
+            $.each(data, function(index, value) {
+            console.log(value);
+            var imageURL = value.urls.regular;
+            var imageID = value.id;
+            //Добавляем фотографии в документ 
+            $('.more').before('<div class="image col-6 col-lg-4 "><img onclick="showPhoto()" data-id="'+ imageID +'" src="' + imageURL + '" class="img-fluid"/></div>');
+            });
+        });
+    } 
+    //___________Отображаем главную
+    showMain();
+    //___________Показать больше Фотографий
+    $('#btnShowMore').click(function() {
+        page++;
+        showMain();
+    });
+
+    //__________Показать страницу Main
+    $('#showMain').click(function() {
+        $('.main').removeClass('hidden');
+        $('.search').addClass('hidden');
+    });
+
+    //__________Поиск
+    function searchResult(){
+        //скрываем всё содержимое Main
+        $('.main').addClass('hidden');
+        
+        var searchTerm = $("#searchTerm").val();  
+        $.getJSON('https://api.unsplash.com/search/photos?' +  'page=' + searchPage + '&query=' + searchTerm + '&' + client_id , function(data) {
+            //получаем данные поиска
+            var  results = data.results;
+            $.each(results, function(index, value) {
+            var imageURL = value.urls.regular;
+            var imageID = value.id;
+            $('.searchResults').append('<div class="image col-6 col-lg-4 "><img onclick="showPhoto()" data-id="'+ imageID +'" src="' + imageURL + '" class="img-fluid"/></div>');
+            });
+        });
+    }
+
+    function showPhoto(){ 
+        photoID=$(event.srcElement).attr("data-id");
+        console.log(photoID);
+        $.getJSON('https://api.unsplash.com/photos/' + photoID + '?' + client_id , function(data) {
+            console.log(data);
+            var imageURL = data.urls.regular;
+            // нереализованно 
+            // $('.singlePhoto').append('<img src="' + imageURL + '" class="img-fluid"/>');
+        });
+    }
+
+    function searchFunction(){
+        $('.searchResults').empty();
+        $('.search').removeClass('hidden');  
+        searchResult();
+    }
+
+    $("#searchTerm").keypress(function(e){
+        if(e.keyCode===13){   //нажатие клавиши Enter
+            searchFunction();
+        }
+    });
+
+    $("#btnSearch").click(function(){
+    searchFunction()
+    });
+
+    $("#btnSearchMore").click(function(){
+    searchPage++;
+    searchResult();
+    });
+</script>
+
+</body>
+</html>
